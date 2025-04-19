@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operation Quantum Shield</title>
+    <style>
+        /* Styles généraux */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0a0e17;
+            color: #e0e0e0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header du jeu */
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(to right, #142238, #1c2e4a);
+            border-radius: 10px;
+            border-bottom: 3px solid #ff6b01;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-header h1 {
+            color: #ff6b01;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px rgba(255, 107, 1, 0.5);
+        }
+        
+        .game-header p {
+            color: #a0a0a0;
+            font-size: 1.1em;
+        }
+        
+        /* Section de briefing */
+        .briefing {
+            background: rgba(20, 35, 55, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3a7bdb;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .briefing h2 {
+            color: #3a7bdb;
+            margin-bottom: 15px;
+        }
+        
+        .briefing p {
+            line-height: 1.6;
+        }
+        
+        /* Zone de jeu principale */
+        .game-area {
+            background: rgba(30, 40, 60, 0.7);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            min-height: 400px;
+        }
+        
+        /* Visualisation du réseau */
+        .network-visual {
+            height: 300px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23111827"/><circle cx="50" cy="50" r="0.5" fill="%233b82f6" opacity="0.4"/><circle cx="10" cy="10" r="0.5" fill="%233b82f6" opacity="0.4"/><circle cx="90" cy="90" r="0.5" fill="%233b82f6" opacity="0.4"/><circle cx="90" cy="10" r="0.5" fill="%233b82f6" opacity="0.4"/><circle cx="10" cy="90" r="0.5" fill="%233b82f6" opacity="0.4"/></svg>');
+            border-bottom: 1px solid #2c3e50;
+        }
+        
+        /* Éléments du réseau */
+        .server {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: #2a3952;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+        }
+        
+        .server:after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: -20px;
+            font-size: 12px;
+            color: #8bacd7;
+            white-space: nowrap;
+        }
+        
+        .server-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .server.paris {
+            top: 130px;
+            left: 120px;
+            border-bottom: 3px solid #0088cc;
+        }
+        
+        .server.lyon {
+            top: 130px;
+            left: 280px;
+            border-bottom: 3px solid #0088cc;
+        }
+        
+        .server.singapour {
+            top: 130px;
+            left: 700px;
+            border-bottom: 3px solid #0088cc;
+        }
+        
+        .satellite {
+            position: absolute;
+            top: 50px;
+            left: 500px;
+            animation: orbit 120s linear infinite;
+            transform-origin: 0 70px;
+            z-index: 3;
+        }
+        
+        .satellite:after {
+            content: "Satellite LEO";
+            position: absolute;
+            top: 25px;
+            left: -20px;
+            font-size: 12px;
+            color: #8bacd7;
+            white-space: nowrap;
+        }
+        
+        .satellite-icon {
+            font-size: 24px;
+            color: #e0e0e0;
+        }
+        
+        .hacker {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #3a2339;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 80px;
+            left: 400px;
+            border: 2px solid #8c2d46;
+            opacity: 0.8;
+            z-index: 2;
+            transform: scale(0);
+            transition: transform 0.5s ease;
+        }
+        
+        .hacker.active {
+            transform: scale(1);
+        }
+        
+        .hacker:after {
+            content: "Hacker";
+            position: absolute;
+            bottom: -20px;
+            font-size: 12px;
+            color: #e05a5a;
+            white-space: nowrap;
+        }
+        
+        .hacker-icon {
+            font-size: 20px;
+            color: #e05a5a;
+        }
+        
+        /* Connexions */
+        .connection {
+            position: absolute;
+            height: 3px;
+            background-color: #235;
+            z-index: 1;
+            transform-origin: 0 0;
+        }
+        
+        .connection.tls {
+            background: linear-gradient(90deg, #2c8a37, #2c8a37 50%, transparent 50%, transparent 100%);
+            background-size: 10px 100%;
+            animation: move-dashes 1s linear infinite;
+        }
+        
+        .connection.quantum {
+            background: linear-gradient(90deg, #3a7bdb, #3a7bdb 50%, transparent 50%, transparent 100%);
+            background-size: 10px 100%;
+            animation: move-dashes 0.5s linear infinite;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .connection.quantum.active {
+            opacity: 1;
+        }
+        
+        .connection.satellite {
+            background: linear-gradient(90deg, #9932cc, #9932cc 50%, transparent 50%, transparent 100%);
+            background-size: 10px 100%;
+            animation: move-dashes 0.3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .connection.satellite.active {
+            opacity: 1;
+        }
+        
+        /* Contrôles interactifs */
+        .controls {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .action-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .action-title {
+            color: #3a7bdb;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        
+        .action-button {
+            background: linear-gradient(to right, #142848, #223860);
+            color: #c0c0c0;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-align: left;
+            border-left: 3px solid #3a7bdb;
+        }
+        
+        .action-button:hover {
+            background: linear-gradient(to right, #193258, #284576);
+            color: #ffffff;
+            transform: translateX(5px);
+        }
+        
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Section d'information */
+        .info-panel {
+            background: rgba(15, 25, 40, 0.7);
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            border-left: 3px solid #ff6b01;
+        }
+        
+        .info-title {
+            color: #ff6b01;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        
+        /* Messages système */
+        .message-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-left: 3px solid #6ca0e0;
+            min-height: 80px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            margin-bottom: 8px;
+            padding-left: 10px;
+            border-left: 2px solid transparent;
+            font-family: monospace;
+            font-size: 0.9em;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.5s forwards;
+        }
+        
+        .message.alert {
+            border-left-color: #e05a5a;
+            color: #e05a5a;
+        }
+        
+        .message.success {
+            border-left-color: #5ae05a;
+            color: #5ae05a;
+        }
+        
+        .message.info {
+            border-left-color: #5a5ae0;
+            color: #5ae0e0;
+        }
+        
+        /* Indicateurs de phase */
+        .phase-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .phase-indicator {
+            width: 30px;
+            height: 5px;
+            background-color: #2a3952;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .phase-indicator.active {
+            background-color: #ff6b01;
+            box-shadow: 0 0 5px rgba(255, 107, 1, 0.7);
+        }
+        
+        /* Animations et effets */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes move-dashes {
+            to {
+                background-position: 20px 0;
+            }
+        }
+        
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateX(150px) rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg) translateX(150px) rotate(-360deg);
+            }
+        }
+        
+        .photon {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #3a7bdb;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #3a7bdb;
+            z-index: 4;
+            opacity: 0;
+        }
+        
+        /* Overlay de fin de jeu */
+        .end-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .end-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .end-content {
+            background: linear-gradient(to right, #142238, #1c2e4a);
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            text-align: center;
+            border: 1px solid #3a7bdb;
+            box-shadow: 0 0 20px rgba(58, 123, 219, 0.3);
+        }
+        
+        .end-content h2 {
+            color: #ff6b01;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        
+        .end-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .restart-button {
+            background: linear-gradient(to right, #ff6b01, #ff8c34);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .restart-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 107, 1, 0.5);
+        }
+        
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: #1a2333;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            z-index: 50;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid #3a7bdb;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        
+        .popup.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .popup-title {
+            color: #3a7bdb;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        
+        .popup-content {
+            margin-bottom: 20px;
+        }
+        
+        .popup-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .popup-button {
+            background: linear-gradient(to right, #193258, #284576);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .popup-button:hover {
+            background: linear-gradient(to right, #224477, #335588);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        /* Quiz */
+        .quiz-container {
+            margin-top: 20px;
+        }
+        
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #c0c0c0;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .quiz-option {
+            background: rgba(30, 40, 60, 0.7);
+            border: 1px solid #3a5279;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            padding-left: 35px;
+        }
+        
+        .quiz-option:before {
+            content: "";
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid #3a7bdb;
+            border-radius: 50%;
+        }
+        
+        .quiz-option:hover {
+            background: rgba(40, 55, 80, 0.7);
+        }
+        
+        .quiz-option.selected:before {
+            background-color: #3a7bdb;
+            box-shadow: 0 0 5px #3a7bdb;
+        }
+        
+        .quiz-option.correct {
+            background: rgba(30, 80, 30, 0.3);
+            border-color: #5ae05a;
+        }
+        
+        .quiz-option.incorrect {
+            background: rgba(80, 30, 30, 0.3);
+            border-color: #e05a5a;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .network-visual {
+                height: 250px;
+            }
+            
+            .server {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .server-icon, .satellite-icon, .hacker-icon {
+                font-size: 18px;
+            }
+            
+            .server.paris {
+                left: 80px;
+            }
+            
+            .server.lyon {
+                left: 200px;
+            }
+            
+            .server.singapour {
+                left: 400px;
+            }
+            
+            .satellite {
+                left: 250px;
+            }
+            
+            .action-button {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-header">
+            <h1>🎮 Operation Quantum Shield</h1>
+            <p>Protégez vos communications sensibles contre les menaces quantiques</p>
+        </div>
+        
+        <div class="briefing">
+            <h2>🧠 Briefing de mission</h2>
+            <p>Bienvenue, agent. Vous allez devoir transmettre un message ultra-confidentiel entre nos bases. Mais attention, des menaces invisibles guettent. Serez-vous capable d'assurer la mission sans compromis ?<br><br>
+            <strong>Le message :</strong> "L'agent Victor sera déployé pour une mission diplomatique. Il transporte les codes d'accès aux satellites d'observation stratégique pour la zone Pacifique."</p>
+        </div>
+        
+        <div class="phase-indicators">
+            <div class="phase-indicator active" data-phase="1"></div>
+            <div class="phase-indicator" data-phase="2"></div>
+            <div class="phase-indicator" data-phase="3"></div>
+            <div class="phase-indicator" data-phase="4"></div>
+            <div class="phase-indicator" data-phase="5"></div>
+        </div>
+        
+        <div class="game-area">
+            <div class="network-visual">
+                <!-- Serveurs -->
+                <div class="server paris" data-name="Serveur Paris">
+                    <div class="server-icon">🏢</div>
+                </div>
+                
+                <div class="server lyon" data-name="Serveur Lyon">
+                    <div class="server-icon">🏢</div>
+                </div>
+                
+                <div class="server singapour" data-name="Serveur Singapour">
+                    <div class="server-icon">🏢</div>
+                </div>
+                
+                <!-- Satellite -->
+                <div class="satellite">
+                    <div class="satellite-icon">🛰️</div>
+                </div>
+                
+                <!-- Hacker -->
+                <div class="hacker">
+                    <div class="hacker-icon">👤</div>
+                </div>
+                
+                <!-- Connexions -->
+                <div class="connection paris-lyon tls"></div>
+                <div class="connection lyon-singapour tls"></div>
+                <div class="connection paris-lyon quantum"></div>
+                <div class="connection paris-satellite satellite"></div>
+                <div class="connection satellite-singapour satellite"></div>
+            </div>
+            
+            <div class="controls">
+                <div class="action-panel">
+                    <h3 class="action-title" id="phase-title">Phase 1 - Communication via TLS</h3>
+                    <div id="action-buttons">
+                        <!-- Boutons d'action dynamiques -->
+                    </div>
+                    
+                    <div class="message-box" id="message-box">
+                        <!-- Messages système -->
+                    </div>
+                </div>
+                
+                <div class="info-panel">
+                    <h3 class="info-title">📚 Notes techniques</h3>
+                    <p id="info-content">Le protocole TLS (Transport Layer Security) permet de créer une connexion chiffrée entre deux serveurs. Les clés utilisées pour ce chiffrement pourraient être vulnérables aux attaques par ordinateur quantique.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Popups -->
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="popup" id="quiz-popup">
+        <h3 class="popup-title">Ordinateur Quantique et Cryptographie</h3>
+        <div class="popup-content">
+            <div class="quiz-container">
+                <p class="quiz-question">Quelle propriété des ordinateurs quantiques les rend capables de casser certains algorithmes de chiffrement actuels ?</p>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-correct="false">Ils ont simplement des processeurs plus rapides</div>
+                    <div class="quiz-option" data-correct="true">Ils peuvent exécuter l'algorithme de Shor pour factoriser de grands nombres premiers</div>
+                    <div class="quiz-option" data-correct="false">Ils possèdent une mémoire de stockage infinie</div>
+                    <div class="quiz-option" data-correct="false">Ils peuvent prédire les clés futures grâce à l'IA</div>
+                </div>
+            </div>
+        </div>
+        <div class="popup-footer">
+            <button class="popup-button" id="quiz-submit" disabled>Valider</button>
+        </div>
+    </div>
+    
+    <div class="popup" id="error-popup">
+        <h3 class="popup-title">Alerte de sécurité</h3>
+        <div class="popup-content">
+            <p>Vous avez détecté un taux d'erreurs anormalement élevé dans la transmission quantique :</p>
+            <ul>
+                <li>Taux d'erreurs : <strong>12.8%</strong></li>
+                <li>Seuil de sécurité : <strong>5%</strong></li>
+            </ul>
+            <p>Une interception est probablement en cours. Que souhaitez-vous faire ?</p>
+        </div>
+        <div class="popup-footer">
+            <button class="popup-button" id="error-abort">Abandonner la clé</button>
+            <button class="popup-button" id="error-change">Changer de canal QKD</button>
+        </div>
+    </div>
+    
+    <div class="end-overlay" id="end-overlay">
+        <div class="end-content">
+            <h2>Mission Accomplie !</h2>
+            <p>Félicitations agent ! Vous avez réussi à sécuriser la transmission du message secret en utilisant la Distribution Quantique de Clés (QKD).</p>
+            <p>Cette technologie offre une sécurité théoriquement inviolable, même face aux futures menaces des ordinateurs quantiques.</p>
+            <p>Le routeur QKD Orange Business Services implémente ces technologies de pointe pour protéger vos données les plus sensibles contre les menaces actuelles et futures.</p>
+            <button class="restart-button" id="restart-button">Rejouer la mission</button>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration du jeu
+        const gameConfig = {
+            currentPhase: 1,
+            phases: [
+                {
+                    id: 1,
+                    title: "Phase 1 - Communication via TLS",
+                    info: "Le protocole TLS (Transport Layer Security) permet de créer une connexion chiffrée entre deux serveurs. Les clés utilisées pour ce chiffrement pourraient être vulnérables aux attaques par ordinateur quantique.",
+                    actions: [
+                        { id: "tls-connection", label: "Initier connexion TLS", next: "send-key" },
+                        { id: "send-key", label: "Envoyer clé chiffrée", disabled: true, next: "phase2" }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "Phase 2 - Attaque par ordinateur quantique",
+                    info: "Les ordinateurs quantiques peuvent utiliser l'algorithme de Shor pour factoriser rapidement des grands nombres, ce qui compromet les systèmes de chiffrement asymétriques comme RSA et ECC.",
+                    actions: [
+                        { id: "quantum-attack", label: "Quiz: Puissance quantique", next: "phase3" }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Phase 3 - Distribution quantique de clés (QKD)",
+                    info: "La distribution quantique de clés utilise les propriétés de la mécanique quantique pour générer une clé partagée. Toute tentative d'interception perturbe les états quantiques de manière détectable.",
+                    actions: [
+                        { id: "setup-qkd", label: "Configurer canal QKD", next: "send-qubits" },
+                        { id: "send-qubits", label: "Envoyer états quantiques", disabled: true, next: "reconciliation" },
+                        { id: "reconciliation", label: "Réconciliation des bases", disabled: true, next: "error-correction" },
+                        { id: "error-correction", label: "Correction d'erreurs", disabled: true, next: "phase4" }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "Phase 4 - Détection d'interception",
+                    info: "Selon les principes de la mécanique quantique, toute mesure d'un état quantique le perturbe. Cette propriété est utilisée en QKD pour détecter les tentatives d'interception.",
+                    actions: [
+                        { id: "check-errors", label: "Vérifier taux d'erreurs", next: "phase5" }
+                    ]
+                },
+                {
+                    id: 5,
+                    title: "Phase 5 - Transmission par satellite",
+                    info: "Pour les communications à longue distance, des satellites en orbite basse peuvent servir de relais pour les signaux quantiques, permettant la QKD intercontinentale.",
+                    actions: [
+                        { id: "align-satellite", label: "Aligner lien optique avec satellite", next: "send-satellite" },
+                        { id: "send-satellite", label: "Envoyer états quantiques via satellite", disabled: true, next: "complete-relay" },
+                        { id: "complete-relay", label: "Relayer vers récepteur", disabled: true, next: "end-game" }
+                    ]
+                }
+            ]
+        };
+        
+        // Références DOM
+        const dom = {
+            actionButtons: document.getElementById('action-buttons'),
+            messageBox: document.getElementById('message-box'),
+            phaseTitle: document.getElementById('phase-title'),
+            infoContent: document.getElementById('info-content'),
+            phaseIndicators: document.querySelectorAll('.phase-indicator'),
+            connections: {
+                tlsPL: document.querySelector('.connection.paris-lyon.tls'),
+                tlsLS: document.querySelector('.connection.lyon-singapour.tls'),
+                quantumPL: document.querySelector('.connection.paris-lyon.quantum'),
+                satPS: document.querySelector('.connection.paris-satellite.satellite'),
+                satSS: document.querySelector('.connection.satellite-singapour.satellite')
+            },
+            servers: {
+                paris: document.querySelector('.server.paris'),
+                lyon: document.querySelector('.server.lyon'),
+                singapour: document.querySelector('.server.singapour')
+            },
+            hacker: document.querySelector('.hacker'),
+            overlay: document.getElementById('overlay'),
+            quizPopup: document.getElementById('quiz-popup'),
+            quizOptions: document.querySelectorAll('.quiz-option'),
+            quizSubmit: document.getElementById('quiz-submit'),
+            errorPopup: document.getElementById('error-popup'),
+            errorAbort: document.getElementById('error-abort'),
+            errorChange: document.getElementById('error-change'),
+            endOverlay: document.getElementById('end-overlay'),
+            restartButton: document.getElementById('restart-button'),
+            satellite: document.querySelector('.satellite')
+        }
+        
+        // Position des nœuds pour les connexions
+        function getNodePositions() {
+            const paris = dom.servers.paris.getBoundingClientRect();
+            const lyon = dom.servers.lyon.getBoundingClientRect();
+            const singapour = dom.servers.singapour.getBoundingClientRect();
+            const satellite = dom.satellite.getBoundingClientRect();
+            const gameArea = document.querySelector('.network-visual').getBoundingClientRect();
+            
+            return {
+                paris: {
+                    x: paris.left + paris.width/2 - gameArea.left,
+                    y: paris.top + paris.height/2 - gameArea.top
+                },
+                lyon: {
+                    x: lyon.left + lyon.width/2 - gameArea.left,
+                    y: lyon.top + lyon.height/2 - gameArea.top
+                },
+                singapour: {
+                    x: singapour.left + singapour.width/2 - gameArea.left,
+                    y: singapour.top + singapour.height/2 - gameArea.top
+                },
+                satellite: {
+                    x: satellite.left + satellite.width/2 - gameArea.left,
+                    y: satellite.top + satellite.height/2 - gameArea.top
+                }
+            };
+        }
+        
+        // Mise à jour des connexions
+        function updateConnections() {
+            const positions = getNodePositions();
+            
+            // Connexion Paris-Lyon
+            const plLength = Math.sqrt(Math.pow(positions.lyon.x - positions.paris.x, 2) + Math.pow(positions.lyon.y - positions.paris.y, 2));
+            const plAngle = Math.atan2(positions.lyon.y - positions.paris.y, positions.lyon.x - positions.paris.x);
+            
+            dom.connections.tlsPL.style.width = `${plLength}px`;
+            dom.connections.tlsPL.style.transform = `rotate(${plAngle}rad)`;
+            dom.connections.tlsPL.style.top = `${positions.paris.y}px`;
+            dom.connections.tlsPL.style.left = `${positions.paris.x}px`;
+            
+            dom.connections.quantumPL.style.width = `${plLength}px`;
+            dom.connections.quantumPL.style.transform = `rotate(${plAngle}rad)`;
+            dom.connections.quantumPL.style.top = `${positions.paris.y}px`;
+            dom.connections.quantumPL.style.left = `${positions.paris.x}px`;
+            
+            // Connexion Lyon-Singapour
+            const lsLength = Math.sqrt(Math.pow(positions.singapour.x - positions.lyon.x, 2) + Math.pow(positions.singapour.y - positions.lyon.y, 2));
+            const lsAngle = Math.atan2(positions.singapour.y - positions.lyon.y, positions.singapour.x - positions.lyon.x);
+            
+            dom.connections.tlsLS.style.width = `${lsLength}px`;
+            dom.connections.tlsLS.style.transform = `rotate(${lsAngle}rad)`;
+            dom.connections.tlsLS.style.top = `${positions.lyon.y}px`;
+            dom.connections.tlsLS.style.left = `${positions.lyon.x}px`;
+            
+            // Connexions avec satellite
+            function updateSatelliteConnections() {
+                const currentPositions = getNodePositions();
+                
+                // Paris-Satellite
+                const psLength = Math.sqrt(Math.pow(currentPositions.satellite.x - currentPositions.paris.x, 2) + Math.pow(currentPositions.satellite.y - currentPositions.paris.y, 2));
+                const psAngle = Math.atan2(currentPositions.satellite.y - currentPositions.paris.y, currentPositions.satellite.x - currentPositions.paris.x);
+                
+                dom.connections.satPS.style.width = `${psLength}px`;
+                dom.connections.satPS.style.transform = `rotate(${psAngle}rad)`;
+                dom.connections.satPS.style.top = `${currentPositions.paris.y}px`;
+                dom.connections.satPS.style.left = `${currentPositions.paris.x}px`;
+                
+                // Satellite-Singapour
+                const ssLength = Math.sqrt(Math.pow(currentPositions.singapour.x - currentPositions.satellite.x, 2) + Math.pow(currentPositions.singapour.y - currentPositions.satellite.y, 2));
+                const ssAngle = Math.atan2(currentPositions.singapour.y - currentPositions.satellite.y, currentPositions.singapour.x - currentPositions.satellite.x);
+                
+                dom.connections.satSS.style.width = `${ssLength}px`;
+                dom.connections.satSS.style.transform = `rotate(${ssAngle}rad)`;
+                dom.connections.satSS.style.top = `${currentPositions.satellite.y}px`;
+                dom.connections.satSS.style.left = `${currentPositions.satellite.x}px`;
+                
+                requestAnimationFrame(updateSatelliteConnections);
+            }
+            
+            updateSatelliteConnections();
+        }
+        
+        // Gestion des messages
+        function addMessage(text, type = '') {
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            dom.messageBox.appendChild(message);
+            dom.messageBox.scrollTop = dom.messageBox.scrollHeight;
+            
+            // Lecture audio (simulation)
+            if (window.speechSynthesis && type !== '') {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'fr-FR';
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Gestion des photons
+        function createPhoton(startX, startY, endX, endY, color = '#3a7bdb') {
+            const photon = document.createElement('div');
+            photon.className = 'photon';
+            photon.style.backgroundColor = color;
+            photon.style.boxShadow = `0 0 5px ${color}`;
+            
+            const gameArea = document.querySelector('.network-visual');
+            gameArea.appendChild(photon);
+            
+            // Animation du photon
+            const startTime = performance.now();
+            const duration = 1000 + Math.random() * 1000; // Durée aléatoire
+            
+            function animatePhoton(time) {
+                const elapsed = time - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                photon.style.left = `${startX + (endX - startX) * progress}px`;
+                photon.style.top = `${startY + (endY - startY) * progress}px`;
+                photon.style.opacity = Math.sin(progress * Math.PI);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animatePhoton);
+                } else {
+                    photon.remove();
+                }
+            }
+            
+            photon.style.left = `${startX}px`;
+            photon.style.top = `${startY}px`;
+            photon.style.opacity = '0';
+            
+            setTimeout(() => {
+                requestAnimationFrame(animatePhoton);
+            }, Math.random() * 500);
+            
+            return photon;
+        }
+        
+        // Animation des photons quantiques
+        function startQuantumPhotons() {
+            const positions = getNodePositions();
+            
+            function generatePhoton() {
+                if (gameConfig.currentPhase === 3) {
+                    createPhoton(
+                        positions.paris.x, 
+                        positions.paris.y, 
+                        positions.lyon.x, 
+                        positions.lyon.y,
+                        '#3a7bdb'
+                    );
+                    setTimeout(generatePhoton, 200 + Math.random() * 300);
+                }
+            }
+            
+            generatePhoton();
+        }
+        
+        // Animation des photons satellite
+        function startSatellitePhotons() {
+            function generatePhoton() {
+                if (gameConfig.currentPhase === 5) {
+                    const positions = getNodePositions();
+                    
+                    // Paris vers satellite
+                    createPhoton(
+                        positions.paris.x, 
+                        positions.paris.y, 
+                        positions.satellite.x, 
+                        positions.satellite.y,
+                        '#9932cc'
+                    );
+                    
+                    // Satellite vers Singapour (délai)
+                    setTimeout(() => {
+                        const updatedPositions = getNodePositions();
+                        createPhoton(
+                            updatedPositions.satellite.x, 
+                            updatedPositions.satellite.y, 
+                            updatedPositions.singapour.x, 
+                            updatedPositions.singapour.y,
+                            '#9932cc'
+                        );
+                    }, 700);
+                    
+                    setTimeout(generatePhoton, 1000 + Math.random() * 500);
+                }
+            }
+            
+            generatePhoton();
+        }
+        
+        // Initialisation de la phase
+        function initPhase(phaseId) {
+            const phase = gameConfig.phases.find(p => p.id === phaseId);
+            gameConfig.currentPhase = phaseId;
+            
+            // Mise à jour des indicateurs de phase
+            dom.phaseIndicators.forEach(indicator => {
+                indicator.classList.remove('active');
+                if (parseInt(indicator.dataset.phase) <= phaseId) {
+                    indicator.classList.add('active');
+                }
+            });
+            
+            // Mise à jour du titre et de l'info
+            dom.phaseTitle.textContent = phase.title;
+            dom.infoContent.textContent = phase.info;
+            
+            // Génération des boutons d'action
+            dom.actionButtons.innerHTML = '';
+            phase.actions.forEach(action => {
+                const button = document.createElement('button');
+                button.className = 'action-button';
+                button.textContent = action.label;
+                button.dataset.action = action.id;
+                button.dataset.next = action.next;
+                
+                if (action.disabled) {
+                    button.disabled = true;
+                }
+                
+                dom.actionButtons.appendChild(button);
+            });
+            
+            // Événements spécifiques à la phase
+            switch(phaseId) {
+                case 1:
+                    // Reset du jeu
+                    dom.hacker.classList.remove('active');
+                    dom.connections.quantumPL.classList.remove('active');
+                    dom.connections.satPS.classList.remove('active');
+                    dom.connections.satSS.classList.remove('active');
+                    addMessage("Mission initiée. Connexion en attente.", "info");
+                    break;
+                case 2:
+                    addMessage("Alerte : Activité suspecte détectée !", "alert");
+                    setTimeout(() => {
+                        addMessage("Un hacker utilise un ordinateur quantique pour tenter de décrypter la clé.", "alert");
+                    }, 1500);
+                    dom.hacker.classList.add('active');
+                    break;
+                case 3:
+                    addMessage("Activation du protocole de Distribution Quantique de Clés (QKD).", "info");
+                    break;
+                case 4:
+                    dom.connections.quantumPL.classList.add('active');
+                    addMessage("Canal quantique actif. Analyse des patrons d'interférence en cours.", "info");
+                    break;
+                case 5:
+                    addMessage("Préparation du relais satellite pour communication longue distance.", "info");
+                    break;
+            }
+        }
+        
+        // Gestionnaire d'actions
+        function handleAction(actionId, nextAction) {
+            switch(actionId) {
+                case 'tls-connection':
+                    addMessage("Connexion TLS établie entre Paris et Lyon.", "success");
+                    // Activer le bouton suivant
+                    document.querySelector(`[data-action="send-key"]`).disabled = false;
+                    break;
+                
+                case 'send-key':
+                    addMessage("Clé symétrique transmise via TLS.", "success");
+                    setTimeout(() => {
+                        // Passer à la phase suivante
+                        initPhase(2);
+                    }, 1500);
+                    break;
+                
+                case 'quantum-attack':
+                    // Afficher le quiz
+                    dom.overlay.classList.add('active');
+                    dom.quizPopup.classList.add('active');
+                    break;
+                
+                case 'setup-qkd':
+                    addMessage("Configuration du canal QKD entre Paris et Lyon.", "info");
+                    document.querySelector(`[data-action="send-qubits"]`).disabled = false;
+                    break;
+                
+                case 'send-qubits':
+                    addMessage("Envoi des états quantiques en cours.", "info");
+                    startQuantumPhotons(); // Démarrer l'animation des photons
+                    document.querySelector(`[data-action="reconciliation"]`).disabled = false;
+                    break;
+                
+                case 'reconciliation':
+                    addMessage("Réconciliation des bases effectuée. 48% des bits conservés.", "success");
+                    document.querySelector(`[data-action="error-correction"]`).disabled = false;
+                    break;
+                
+                case 'error-correction':
+                    addMessage("Correction d'erreurs réalisée. Clé finale établie.", "success");
+                    setTimeout(() => {
+                        initPhase(4);
+                    }, 1500);
+                    break;
+                
+                case 'check-errors':
+                    addMessage("Analyse du taux d'erreurs en cours...", "info");
+                    setTimeout(() => {
+                        // Afficher la popup d'erreurs
+                        dom.overlay.classList.add('active');
+                        dom.errorPopup.classList.add('active');
+                    }, 1500);
+                    break;
+                
+                case 'align-satellite':
+                    addMessage("Alignement du lien optique avec le satellite.", "info");
+                    dom.connections.satPS.classList.add('active');
+                    dom.connections.satSS.classList.add('active');
+                    document.querySelector(`[data-action="send-satellite"]`).disabled = false;
+                    break;
+                
+                case 'send-satellite':
+                    addMessage("Envoi des états quantiques via satellite.", "info");
+                    startSatellitePhotons(); // Démarrer l'animation des photons satellite
+                    document.querySelector(`[data-action="complete-relay"]`).disabled = false;
+                    break;
+                
+                case 'complete-relay':
+                    addMessage("Transmission satellite complétée. Message sécurisé.", "success");
+                    setTimeout(() => {
+                        // Afficher l'écran de fin
+                        dom.endOverlay.classList.add('active');
+                    }, 2000);
+                    break;
+                
+                case 'end-game':
+                    // Géré par le bouton de fin
+                    break;
+            }
+        }
+        
+        // Gestionnaires d'événements
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialisation
+            updateConnections();
+            initPhase(1);
+            
+            // Gestion des clics sur les boutons d'action
+            dom.actionButtons.addEventListener('click', (e) => {
+                const button = e.target.closest('.action-button');
+                if (button && !button.disabled) {
+                    const actionId = button.dataset.action;
+                    const nextAction = button.dataset.next;
+                    handleAction(actionId, nextAction);
+                }
+            });
+            
+            // Quiz
+            dom.quizOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Désélectionner toutes les options
+                    dom.quizOptions.forEach(opt => opt.classList.remove('selected'));
+                    // Sélectionner l'option cliquée
+                    option.classList.add('selected');
+                    // Activer le bouton de validation
+                    dom.quizSubmit.disabled = false;
+                });
+            });
+            
+            dom.quizSubmit.addEventListener('click', () => {
+                const selectedOption = document.querySelector('.quiz-option.selected');
+                if (selectedOption) {
+                    // Afficher la réponse correcte/incorrecte
+                    dom.quizOptions.forEach(option => {
+                        if (option.dataset.correct === 'true') {
+                            option.classList.add('correct');
+                        } else if (option === selectedOption && option.dataset.correct !== 'true') {
+                            option.classList.add('incorrect');
+                        }
+                    });
+                    
+                    // Fermer la popup après un délai
+                    setTimeout(() => {
+                        dom.overlay.classList.remove('active');
+                        dom.quizPopup.classList.remove('active');
+                        
+                        // Réinitialiser pour la prochaine fois
+                        dom.quizOptions.forEach(opt => {
+                            opt.classList.remove('selected', 'correct', 'incorrect');
+                        });
+                        dom.quizSubmit.disabled = true;
+                        
+                        // Passer à la phase suivante
+                        initPhase(3);
+                    }, 2000);
+                }
+            });
+            
+            // Popup d'erreurs
+            dom.errorAbort.addEventListener('click', () => {
+                dom.overlay.classList.remove('active');
+                dom.errorPopup.classList.remove('active');
+                addMessage("Clé abandonnée. Tentative d'intrusion confirmée.", "alert");
+                setTimeout(() => {
+                    initPhase(5);
+                }, 1500);
+            });
+            
+            dom.errorChange.addEventListener('click', () => {
+                dom.overlay.classList.remove('active');
+                dom.errorPopup.classList.remove('active');
+                addMessage("Changement de canal QKD effectué. Nouvelle base sécurisée.", "success");
+                setTimeout(() => {
+                    initPhase(5);
+                }, 1500);
+            });
+            
+            // Redémarrage du jeu
+            dom.restartButton.addEventListener('click', () => {
+                dom.endOverlay.classList.remove('active');
+                initPhase(1);
+            });
+            
+            // Démarrer avec un message d'accueil
+            addMessage("Bienvenue, agent. Prêt pour la mission ?", "info");
+        });
+    </script>
+
+<script>
+const quizBank = {
+  1: [
+    {
+      question: "Quel est le rôle principal de TLS ?",
+      options: [
+        "Compresser les données",
+        "Établir une connexion chiffrée entre deux machines",
+        "Envoyer les paquets plus vite",
+        "Empêcher l'accès Wi-Fi public"
+      ],
+      correct: 1
+    },
+    {
+      question: "Quel est le danger des ordinateurs quantiques pour TLS ?",
+      options: [
+        "Ils provoquent des bugs logiciels",
+        "Ils cassent les mots de passe par force brute",
+        "Ils peuvent factoriser les clés asymétriques utilisées pour l'échange",
+        "Ils n'ont aucun impact"
+      ],
+      correct: 2
+    }
+  ],
+  2: [
+    {
+      question: "Quel algorithme quantique est capable de factoriser de grands entiers ?",
+      options: ["Grover", "Shor", "RSA", "Diffie-Hellman"],
+      correct: 1
+    },
+    {
+      question: "Pourquoi RSA devient vulnérable face aux ordinateurs quantiques ?",
+      options: [
+        "Car ils ont beaucoup de mémoire",
+        "Car ils peuvent factoriser les grands entiers très rapidement",
+        "Car ils interceptent le réseau",
+        "Aucune raison"
+      ],
+      correct: 1
+    }
+  ],
+  3: [
+    {
+      question: "Quelle propriété des qubits permet de détecter une interception ?",
+      options: ["La superposition", "L’intrication", "La mesure perturbe l'état", "Le spin"],
+      correct: 2
+    },
+    {
+      question: "Que signifie la réconciliation des bases ?",
+      options: [
+        "Supprimer les mauvaises clés",
+        "Corriger les erreurs dans les bits",
+        "Comparer les bases de mesure entre expéditeur et récepteur",
+        "Mesurer les photons"
+      ],
+      correct: 2
+    }
+  ],
+  4: [
+    {
+      question: "Comment détecte-t-on une attaque dans QKD ?",
+      options: [
+        "En analysant les erreurs de transmission",
+        "En écoutant le réseau",
+        "Avec une caméra",
+        "Avec une IA préventive"
+      ],
+      correct: 0
+    }
+  ],
+  5: [
+    {
+      question: "Quel est l'avantage d'utiliser des satellites en QKD ?",
+      options: [
+        "Réduire les coûts",
+        "Permettre une couverture intercontinentale",
+        "Utiliser le Wi-Fi quantique",
+        "Créer des clones de photons"
+      ],
+      correct: 1
+    },
+    {
+      question: "Qu'est-ce qu'un satellite LEO ?",
+      options: [
+        "Satellite de basse orbite",
+        "Satellite lunaire",
+        "Satellite militaire",
+        "Station orbitale"
+      ],
+      correct: 0
+    }
+  ]
+};
+
+function presentQuiz(phaseId, onComplete) {
+  const questions = quizBank[phaseId];
+  if (!questions || questions.length === 0) {
+    onComplete();
+    return;
+  }
+
+  let current = 0;
+
+  function showQuestion(index) {
+    const q = questions[index];
+    const container = document.querySelector(".quiz-container");
+    container.innerHTML = '';
+
+    const questionEl = document.createElement("p");
+    questionEl.className = "quiz-question";
+    questionEl.textContent = q.question;
+
+    const optionsEl = document.createElement("div");
+    optionsEl.className = "quiz-options";
+
+    q.options.forEach((opt, i) => {
+      const div = document.createElement("div");
+      div.className = "quiz-option";
+      div.textContent = opt;
+      div.addEventListener("click", () => {
+        document.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+        div.classList.add("selected");
+        dom.quizSubmit.disabled = false;
+      });
+      optionsEl.appendChild(div);
+    });
+
+    container.appendChild(questionEl);
+    container.appendChild(optionsEl);
+
+    dom.overlay.classList.add("active");
+    dom.quizPopup.classList.add("active");
+    dom.quizSubmit.disabled = true;
+  }
+
+  dom.quizSubmit.onclick = () => {
+    const selected = document.querySelector('.quiz-option.selected');
+    if (!selected) return;
+    const index = Array.from(selected.parentNode.children).indexOf(selected);
+    const correct = quizBank[phaseId][current].correct;
+
+    document.querySelectorAll('.quiz-option').forEach((opt, i) => {
+      opt.classList.remove("selected");
+      if (i === correct) opt.classList.add("correct");
+      else if (opt === selected) opt.classList.add("incorrect");
+    });
+
+    setTimeout(() => {
+      dom.quizPopup.classList.remove("active");
+      dom.overlay.classList.remove("active");
+      current++;
+      if (current < questions.length) showQuestion(current);
+      else onComplete();
+    }, 1500);
+  };
+
+  showQuestion(current);
+}
+
+const originalInitPhase = initPhase;
+initPhase = function (phaseId) {
+  presentQuiz(phaseId, () => originalInitPhase(phaseId));
+};
+</script>
+
+</body>
+</html>
